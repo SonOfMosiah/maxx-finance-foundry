@@ -429,4 +429,15 @@ contract PrizeClaimTest is Test {
             prizeClaim.setMaxxStake(_maxxStake);
         }
     }
+
+    function test_getMerkleRoot() public {
+        uint256 rootIndex = 0;
+        prizeClaim.addMerkleRoot(MERKLE_ROOT);
+        bytes32 root = prizeClaim.getMerkleRoot(rootIndex);
+        assertEq(root, MERKLE_ROOT);
+
+        // should revert if rootIndex is out of bounds
+        vm.expectRevert();
+        prizeClaim.getMerkleRoot(rootIndex + 1);
+    }
 }
