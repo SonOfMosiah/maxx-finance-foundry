@@ -26,7 +26,7 @@ contract PrizeClaim is Ownable, ReentrancyGuard {
     /// @notice The merkle root cannot be zero
     error InvalidMerkleRoot();
     /// @notice The maxx address cannot be zero
-    error InvalidMaxxAddress();
+    error InvalidAddress();
 
     /// @notice Emitted when a merkle root is added
     /// @param merkleRootIndex The index of the merkle root
@@ -55,15 +55,6 @@ contract PrizeClaim is Ownable, ReentrancyGuard {
     /// @param duration The duration of the stake
     event AdminCreatedStake(address user, uint256 amount, uint256 duration);
 
-
-    struct Claim {
-        address user;
-        uint256 amount;
-        uint256 shares;
-        uint256 stakeId;
-        uint256 timestamp;
-    }
-
     /// @notice Array of Merkle roots for the prize claim lists
     bytes32[] public merkleRoots;
 
@@ -79,6 +70,7 @@ contract PrizeClaim is Ownable, ReentrancyGuard {
     /// @notice True if user has already claimed MAXX
     mapping(address user => mapping(uint256 rootIndex => bool claim)) public hasClaimed;
 
+    /// @notice The total amount of MAXX claimed
     uint256 public claimedAmount;
 
     constructor(address _owner, address _maxx, address _maxxStake) {
@@ -158,6 +150,9 @@ contract PrizeClaim is Ownable, ReentrancyGuard {
     /// @dev Emits a MaxxStakeSet event
     /// @param _maxxStake The Maxx Finance Staking contract
     function setMaxxStake(address _maxxStake) external onlyOwner {
+        if (_maxxStake == address(0)) {
+            revert InvalidAddress();
+        }
         maxxStake = IMaxxStake(_maxxStake);
         maxx.approve(_maxxStake, type(uint256).max);
         emit MaxxStakeSet(_maxxStake);
@@ -168,7 +163,7 @@ contract PrizeClaim is Ownable, ReentrancyGuard {
     /// @param _maxx The maxx token contract address
     function setMaxx(address _maxx) external onlyOwner {
         if (_maxx == address(0)) {
-            revert InvalidMaxxAddress();
+            revert InvalidAddress();
         }
         maxx = IERC20(_maxx);
         emit MaxxSet(_maxx);
