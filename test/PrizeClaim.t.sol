@@ -287,6 +287,27 @@ contract PrizeClaimTest is Test {
         assertEq(newClaimedAmount, prevClaimedAmount + leaves[0].amount);
     }
 
+    function test_hasClaimedUpdate() public {
+        Leaf[] memory leaves = merkleConstants.getLeaves();
+        bytes32[][] memory proof = merkleConstants.getProofs();
+        prizeClaim.addMerkleRoot(MERKLE_ROOT);
+        uint256 rootIndex = 0;
+
+        deal({
+            to: address(prizeClaim),
+            token: address(maxx),
+            give: leaves[0].amount
+        });
+
+        bool hasClaimed = prizeClaim.hasClaimed(leaves[0].user, rootIndex);
+        assertEq(hasClaimed, false);
+        vm.startPrank(leaves[0].user);
+        prizeClaim.claimPrize(leaves[0].amount, leaves[0].duration, rootIndex, leaves[0].stakeName, proof[0]);
+        vm.stopPrank();
+        hasClaimed = prizeClaim.hasClaimed(leaves[0].user, rootIndex);
+        assertEq(hasClaimed, true);
+    }
+
     function test_adminCreateStake(address _user, uint256 _amount, uint256 _duration) public {
         // Can't transfer to address(0)
         vm.assume(_user != address(0));
@@ -332,6 +353,32 @@ contract PrizeClaimTest is Test {
                 give: _amount
             });
         vm.expectRevert(IStake.InvalidAmount.selector);
+        prizeClaim.adminCreateStake(_user, _amount, _duration);
+    }
+
+    function test_invalidAdminStakeDurationLow(address _user, uint256 _amount, uint256 _duration) public {
+        vm.assume(_user != address(0));
+        _amount = bound(_amount, MIN_CLAIM_AMOUNT, MAX_CLAIM_AMOUNT);
+        _duration = bound(_duration, 0, MIN_STAKE_DURATION - 1);
+        deal({
+                to: address(prizeClaim),
+                token: address(maxx),
+                give: _amount
+            });
+        vm.expectRevert(PrizeClaim.InvalidDuration.selector);
+        prizeClaim.adminCreateStake(_user, _amount, _duration);
+    }
+
+    function test_invalidAdminStakeDurationHigh(address _user, uint256 _amount, uint256 _duration) public {
+        vm.assume(_user != address(0));
+        _amount = bound(_amount, MIN_CLAIM_AMOUNT, MAX_CLAIM_AMOUNT);
+        _duration = bound(_duration, MAX_STAKE_DURATION + 1, type(uint256).max);
+        deal({
+                to: address(prizeClaim),
+                token: address(maxx),
+                give: _amount
+            });
+        vm.expectRevert(PrizeClaim.InvalidDuration.selector);
         prizeClaim.adminCreateStake(_user, _amount, _duration);
     }
 
