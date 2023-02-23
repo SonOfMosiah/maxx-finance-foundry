@@ -10,7 +10,7 @@ contract DeployPrizeClaim is Script {
     address maxx = 0x6D9C0b104e5Af90A6d11a13Eb77288e533333301;
     address stake = 0x3D769818DbD4ed321a2B06342b54513B33333304;
 
-    address _owner = 0x54409dDAdb011eE6e62a5011DeB87CE54f314530; // TODO: replace with the owner address
+    address _owner = 0x7d9119D1d1D348197EE1F396B3881bC493e78725;
 
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
