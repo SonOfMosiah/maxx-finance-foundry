@@ -4,6 +4,7 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import {PrizeClaim} from "src/PrizeClaim.sol";
+import {DeployPrizeClaim} from "script/deploy/PrizeClaim.s.sol";
 import {IMaxxFinance} from "src/interfaces/IMaxxFinance.sol";
 import {MaxxStake, IStake, IERC721} from "src/MaxxStake.sol";
 
@@ -441,3 +442,15 @@ contract PrizeClaimTest is Test {
         prizeClaim.getMerkleRoot(rootIndex + 1);
     }
 }
+
+// contract DeployPrizeClaimTest is Test {
+//     DeployPrizeClaim deployPrizeClaim;
+
+//     function setUp() public {
+//         deployPrizeClaim = new DeployPrizeClaim();
+//     }
+
+//     function test_run() public {
+//         deployPrizeClaim.run();
+//     }
+// }
