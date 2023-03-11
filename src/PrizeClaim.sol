@@ -33,6 +33,10 @@ contract PrizeClaim is Ownable, ReentrancyGuard {
     /// @param merkleRoot The merkle root
     event MerkleRootAdded(uint256 merkleRootIndex, bytes32 merkleRoot);
 
+    /// @notice Emitted when a merkle root is voided
+    /// @param merkleRootIndex The index of the merkle root
+    event MerkleRootVoided(uint256 merkleRootIndex);
+
     /// @notice Emitted when the MAXX token is set
     /// @param maxxAddress The address of the MAXX token
     event MaxxSet(address maxxAddress);
@@ -76,6 +80,7 @@ contract PrizeClaim is Ownable, ReentrancyGuard {
     constructor(address _owner, address _maxx, address _maxxStake) {
         _transferOwnership(_owner);
         maxx = IERC20(_maxx);
+        maxx.approve(_maxxStake, type(uint256).max);
         maxxStake = IMaxxStake(_maxxStake);
     }
 
@@ -144,6 +149,14 @@ contract PrizeClaim is Ownable, ReentrancyGuard {
         }
         merkleRoots.push(_merkleRoot);
         emit MerkleRootAdded(merkleRoots.length - 1, _merkleRoot);
+    }
+
+    /// @notice Function to void a merkle root
+    /// @dev Emits a MerkleRootVoided event
+    /// @param _merkleRootIndex The index of the merkle root to void
+    function voidMerkleRoot(uint256 _merkleRootIndex) external onlyOwner {
+        merkleRoots[_merkleRootIndex] = bytes32(0);
+        emit MerkleRootVoided(_merkleRootIndex);
     }
 
     /// @notice Set the Maxx Finance Staking contract

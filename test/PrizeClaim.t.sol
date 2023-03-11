@@ -21,6 +21,7 @@ struct Leaf {
 /// @author SonOfMosiah <sonofmosiah.eth>
 contract PrizeClaimTest is Test {
     uint256 polygonFork;
+
     PrizeClaim public prizeClaim;
     IMaxxFinance public maxx;
     MaxxStake public stake;
@@ -50,13 +51,9 @@ contract PrizeClaimTest is Test {
         maxx = IMaxxFinance(address(0x6D9C0b104e5Af90A6d11a13Eb77288e533333301));
         stake = MaxxStake(address(0x3D769818DbD4ed321a2B06342b54513B33333304));
 
-                // Deploy contracts
+        // Deploy contracts
         merkleConstants = new MerkleConstants();
         prizeClaim = new PrizeClaim(address(this), address(maxx), address(stake));
-
-        // Set external contract addresses
-        prizeClaim.setMaxx(address(maxx));
-        prizeClaim.setMaxxStake(address(stake));
     }
 
     function test_addMerkleRoot(bytes32 _merkleRoot) public {
@@ -108,6 +105,57 @@ contract PrizeClaimTest is Test {
             assertEq(success2, true);
         }
 
+    }
+
+    function test_claimPrizeSingle() public {
+        Leaf memory leaf = merkleConstants.getLeaf();
+        bytes32[] memory proof = merkleConstants.getProofSingle();
+        bytes32 NEW_MERKLE_ROOT = 0x2197029ce54fc89c80114a8cc670b4d80344d6bc060f27f5e81fba7bc4afc3b2;
+        prizeClaim.addMerkleRoot(NEW_MERKLE_ROOT);
+        uint256 rootIndex = 0;
+
+        bytes32 leafNode = keccak256(bytes.concat(keccak256(abi.encode(leaf.user, leaf.amount, leaf.duration, leaf.stakeName))));
+
+            bool success = MerkleProof.verify(proof, NEW_MERKLE_ROOT, leafNode);
+            assertEq(success, true);
+
+            bool success2 = prizeClaim.verifyMerkleLeaf(leaf.user, leaf.amount, leaf.duration, rootIndex, leaf.stakeName, proof);
+            assertEq(success2, true);
+
+            deal({
+                to: address(prizeClaim),
+                token: address(maxx),
+                give: type(uint256).max
+            });
+
+            vm.startPrank(leaf.user);
+            vm.expectRevert(PrizeClaim.InvalidAmount.selector);
+            prizeClaim.claimPrize(leaf.amount, leaf.duration,rootIndex, leaf.stakeName, proof);
+            vm.stopPrank();
+    }
+
+    function test_claimPrizeVoid() public {
+        Leaf memory leaf = merkleConstants.getLeaf();
+        bytes32[] memory proof = merkleConstants.getProofSingle();
+        bytes32 NEW_MERKLE_ROOT = 0x2197029ce54fc89c80114a8cc670b4d80344d6bc060f27f5e81fba7bc4afc3b2;
+        prizeClaim.addMerkleRoot(NEW_MERKLE_ROOT);
+        uint256 rootIndex = 0;
+        prizeClaim.voidMerkleRoot(0);
+
+            deal({
+                to: address(prizeClaim),
+                token: address(maxx),
+                give: type(uint256).max
+            });
+
+            vm.startPrank(leaf.user);
+            vm.expectRevert(PrizeClaim.InvalidProof.selector);
+            prizeClaim.claimPrize(leaf.amount, leaf.duration,rootIndex, leaf.stakeName, proof);
+
+            bytes32[] memory newProof = new bytes32[](0);
+            vm.expectRevert(PrizeClaim.InvalidProof.selector);
+            prizeClaim.claimPrize(leaf.amount, leaf.duration,rootIndex, leaf.stakeName, newProof);
+            vm.stopPrank();
     }
 
     function test_claimPrize() public {

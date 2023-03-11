@@ -198,4 +198,22 @@ contract MerkleConstants {
         bytes32[][] memory proofs = getProofs();
         return proofs[index];
     }
+
+    function getProofSingle() public pure returns (bytes32[] memory) {
+        bytes32[] memory proof = new bytes32[](4);
+        proof[0] = bytes32(uint256(0xcec894a447d3784018f51e12660fd2452ca2e82a15d9361b37e75e10df22aec7));
+        proof[1] = bytes32(uint256(0xbd9f41a8be1cb1c059dfb0a96987505aadd2740b49a3a5daaf017dd70ea0cd18));
+        proof[2] = bytes32(uint256(0x8d2c3b1a3a6ffb2a4365fced884703a418d67c7091369ecabcfba44cc3a39f3a));
+        proof[3] = bytes32(uint256(0x5ce0d3aeb7338bbbc40dd80cfb9d23c7aa7d93645d5ba99a8637d32820a1eefc));
+        return proof;
+    }
+
+    function getLeaf() public pure returns (Leaf memory leaf) {
+        leaf = Leaf({
+            user: 0xC079c7431970A5a3BE8975A34eFA232e0c961477,
+            amount: 100000,
+            duration: 180,
+            stakeName: 'Share in 1,000,000 $MAXX (early birds)'
+        });
+    }
 }
